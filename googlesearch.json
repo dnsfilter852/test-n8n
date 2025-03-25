@@ -1,0 +1,130 @@
+{
+  "name": "Simple Google Search Scraper for Kowloon Bay",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.google.com/search?q=\"kowloon bay\" company (phone OR email OR contact OR website)",
+        "options": {
+          "headers": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml"
+            }
+          ]
+        }
+      },
+      "name": "Fetch Google Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "titles",
+              "cssSelector": "h3",
+              "returnValue": "text",
+              "returnArray": true
+            },
+            {
+              "key": "urls",
+              "cssSelector": "a[href^='http']",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "descriptions",
+              "cssSelector": ".VwiC3b",
+              "returnValue": "text",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extract HTML",
+      "type": "n8n-nodes-base.htmlExtract",
+      "typeVersion": 1,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nitems.forEach(item => {\n  const titles = item.json.titles || [];\n  const urls = item.json.urls || [];\n  const descriptions = item.json.descriptions || [];\n\n  for (let i = 0; i < Math.min(titles.length, urls.length); i++) {\n    const description = descriptions[i] || '';\n    const phoneMatch = description.match(/\\+852 \\d{4} \\d{4}/) || '';\n    const emailMatch = description.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/) || '';\n\n    results.push({\n      json: {\n        title: titles[i],\n        url: urls[i],\n        phone: phoneMatch ? phoneMatch[0] : '',\n        email: emailMatch ? emailMatch[0] : ''\n      }\n    });\n  }\n});\n\nreturn results;"
+      },
+      "name": "Clean Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "filePath": "kowloon_bay_results.csv"
+      },
+      "name": "Save to CSV",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1060, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Google Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Google Search": {
+      "main": [
+        [
+          {
+            "node": "Extract HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract HTML": {
+      "main": [
+        [
+          {
+            "node": "Clean Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Data": {
+      "main": [
+        [
+          {
+            "node": "Save to CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
