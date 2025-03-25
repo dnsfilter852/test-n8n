@@ -1,5 +1,5 @@
 {
-  "name": "Simple Google Search Scraper for Kowloon Bay",
+  "name": "Simple Google Search Scraper for Kowloon Bay - Fixed Response",
   "nodes": [
     {
       "parameters": {},
@@ -11,6 +11,7 @@
     {
       "parameters": {
         "url": "https://www.google.com/search?q=\"kowloon bay\" company (phone OR email OR contact OR website)",
+        "responseFormat": "string",
         "options": {
           "headers": [
             {
@@ -31,6 +32,7 @@
     },
     {
       "parameters": {
+        "dataPropertyName": "html",
         "extractionValues": {
           "values": [
             {
@@ -79,52 +81,3 @@
       "type": "n8n-nodes-base.writeBinaryFile",
       "typeVersion": 1,
       "position": [1060, 300]
-    }
-  ],
-  "connections": {
-    "Manual Trigger": {
-      "main": [
-        [
-          {
-            "node": "Fetch Google Search",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Google Search": {
-      "main": [
-        [
-          {
-            "node": "Extract HTML",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract HTML": {
-      "main": [
-        [
-          {
-            "node": "Clean Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Clean Data": {
-      "main": [
-        [
-          {
-            "node": "Save to CSV",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  }
-}
